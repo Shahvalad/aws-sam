@@ -8,6 +8,7 @@ dependencies {
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.2'
     implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
     implementation 'com.google.code.gson:gson:2.10'
+    implementation 'software.amazon.awssdk:dynamodb-enhanced:2.20.0'
 }
 
 task buildZip(type: Zip) {

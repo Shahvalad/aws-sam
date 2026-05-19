@@ -1,11 +1,16 @@
-import java.util.HashMap;
-import com.google.gson.Gson;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 
-public class Handler {
-    public Object handler(Object event) {
-        Gson gson = new Gson();
-        System.out.println(gson.toJson(event));
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-        return new HashMap();
+public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>{
+
+    private final DynamoDbClient dynamoDbClient = DynamoDbClient.create(); 
+
+    @Override
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
