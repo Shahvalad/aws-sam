@@ -1,0 +1,135 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Pirates:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: pirateId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: pirateId
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  GetPirateByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: GetPirateByIdFunction
+      CodeUri: src/GetPirateByIdFunction
+      Handler: Handler::handler
+      Runtime: java21
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        PiratesApiGETpiratespirateId:
+          Type: Api
+          Properties:
+            Path: /pirates/{pirateId}
+            Method: GET
+            RestApiId: !Ref PiratesApi
+      Environment:
+        Variables:
+          PIRATES_TABLE_NAME: !Ref Pirates
+          PIRATES_TABLE_ARN: !GetAtt Pirates.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Pirates
+  GetPirateByIdFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetPirateByIdFunction}
+  GetAllPiratesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: GetAllPiratesFunction
+      CodeUri: src/GetAllPiratesFunction
+      Handler: Handler::handler
+      Runtime: java21
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Environment:
+        Variables:
+          PIRATES_TABLE_NAME: !Ref Pirates
+          PIRATES_TABLE_ARN: !GetAtt Pirates.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Pirates
+  GetAllPiratesFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetAllPiratesFunction}
+  SavePirateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: SavePirateFunction
+      CodeUri: src/SavePirateFunction
+      Handler: Handler::handler
+      Runtime: java21
+      MemorySize: 256
+      Timeout: 30
+      Tracing: Active
+      Events:
+        PiratesApiPOSTpirates:
+          Type: Api
+          Properties:
+            Path: /pirates
+            Method: POST
+            RestApiId: !Ref PiratesApi
+      Environment:
+        Variables:
+          PIRATES_TABLE_NAME: !Ref Pirates
+          PIRATES_TABLE_ARN: !GetAtt Pirates.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Pirates
+  SavePirateFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SavePirateFunction}
+  PiratesApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub
+        - ${ResourceName} From Stack ${AWS::StackName}
+        - ResourceName: PiratesApi
+      StageName: Prod
+      DefinitionBody:
+        openapi: '3.0'
+        info: {}
+        paths:
+          /pirates:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SavePirateFunction.Arn}/invocations
+              responses: {}
+            get:
+              responses: {}
+          /pirates/{pirateId}:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetPirateByIdFunction.Arn}/invocations
+              responses: {}
+      EndpointConfiguration: REGIONAL
+      TracingEnabled: true
+      Cors:
+        MaxAge: 5
