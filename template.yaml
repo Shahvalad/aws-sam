@@ -14,12 +14,14 @@ Resources:
         StreamViewType: NEW_AND_OLD_IMAGES
   GetPirateByIdFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: GetPirateByIdFunction
-      CodeUri: src/GetPirateByIdFunction
-      Handler: Handler::handler
+      CodeUri: .
+      Handler: com.serverless.pirates.getbyid.Handler::handleRequest
       Runtime: java21
       MemorySize: 256
       Timeout: 30
@@ -41,16 +43,19 @@ Resources:
   GetPirateByIdFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${GetPirateByIdFunction}
   GetAllPiratesFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: GetAllPiratesFunction
-      CodeUri: src/GetAllPiratesFunction
-      Handler: Handler::handler
+      CodeUri: .
+      Handler: com.serverless.pirates.getall.Handler::handleRequest
       Runtime: java21
       MemorySize: 256
       Timeout: 30
@@ -72,16 +77,19 @@ Resources:
   GetAllPiratesFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${GetAllPiratesFunction}
   SavePirateFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: SavePirateFunction
-      CodeUri: src/SavePirateFunction
-      Handler: Handler::handler
+      CodeUri: .
+      Handler: com.serverless.pirates.save.Handler::handleRequest
       Runtime: java21
       MemorySize: 256
       Timeout: 30
@@ -103,6 +111,7 @@ Resources:
   SavePirateFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${SavePirateFunction}
   PiratesApi:

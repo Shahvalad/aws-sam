@@ -6,9 +6,8 @@ dependencies {
     implementation project(':common')
 }
 
-task buildZip(type: Zip) {
-    from compileJava
-    from processResources
+tasks.register('buildZip', Zip) {
+    from sourceSets.main.output
     into('lib') {
         from configurations.runtimeClasspath
     }
