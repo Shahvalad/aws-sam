@@ -1,0 +1,6 @@
+rootProject.name = 'aws-sam'
+
+include 'common'
+include 'GetAllPiratesFunction'
+include 'GetPirateByIdFunction'
+include 'SavePirateFunction'

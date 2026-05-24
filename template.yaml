@@ -6,14 +6,10 @@ Resources:
       AttributeDefinitions:
         - AttributeName: pirateId
           AttributeType: S
-        - AttributeName: createdAt
-          AttributeType: S
       BillingMode: PAY_PER_REQUEST
       KeySchema:
         - AttributeName: pirateId
           KeyType: HASH
-        - AttributeName: createdAt
-          KeyType: RANGE
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
   GetPirateByIdFunction:
