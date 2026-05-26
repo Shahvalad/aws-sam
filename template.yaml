@@ -12,6 +12,7 @@ Resources:
           KeyType: HASH
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+
   GetPirateByIdFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -40,12 +41,14 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref Pirates
+
   GetPirateByIdFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${GetPirateByIdFunction}
+
   GetAllPiratesFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -74,12 +77,16 @@ Resources:
             Path: /pirates
             Method: GET
             RestApiId: !Ref PiratesApi
+            Auth:
+              Authorizer: NONE
+
   GetAllPiratesFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${GetAllPiratesFunction}
+
   SavePirateFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -108,12 +115,42 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref Pirates
+
   SavePirateFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${SavePirateFunction}
+
+  PiratesUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: pirates-user-pool
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  PiratesUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: pirates-client
+      UserPoolId: !Ref PiratesUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+
   PiratesApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -121,31 +158,25 @@ Resources:
         - ${ResourceName} From Stack ${AWS::StackName}
         - ResourceName: PiratesApi
       StageName: Prod
-      DefinitionBody:
-        openapi: '3.0'
-        info: {}
-        paths:
-          /pirates:
-            post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SavePirateFunction.Arn}/invocations
-              responses: {}
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllPiratesFunction.Arn}/invocations
-              responses: {}
-          /pirates/{pirateId}:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetPirateByIdFunction.Arn}/invocations
-              responses: {}
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt PiratesUserPool.Arn
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors:
         MaxAge: 5
+
+Outputs:
+  PiratesUserPoolId:
+    Description: Cognito User Pool ID for app auth config
+    Value: !Ref PiratesUserPool
+
+  PiratesUserPoolClientId:
+    Description: Cognito App Client ID for app auth config
+    Value: !Ref PiratesUserPoolClient
+
+  PiratesApiUrl:
+    Description: Base URL for the protected Pirates API
+    Value: !Sub https://${PiratesApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
