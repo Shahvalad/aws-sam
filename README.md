@@ -1,2 +1,3 @@
-<img width="2644" height="1062" alt="infrastructure-composer-template yaml" src="https://github.com/user-attachments/assets/931cd513-1bc5-47e9-8212-6df258f47b56" />
-This code does not use best practices
+<img width="2664" height="1301" alt="infrastructure-composer-template yaml" src="https://github.com/user-attachments/assets/dd77d1b1-e9d8-4b4e-a34b-800daa1c554a" />
+
+This code does not follow best practices
